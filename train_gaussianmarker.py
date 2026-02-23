@@ -362,7 +362,7 @@ def training_3d_decoder(dataset, opt, pipe, testing_iterations, args):
     optimizer = torch.optim.Adam(
         # pointnet.parameters(),
         list(pointnet_adv.parameters()) + list(pointnet_msg.parameters()),
-        lr=1e-5,
+        lr=1e-4, # from 1e-5 to 1e-4
         betas=(0.9, 0.999),
         eps=1e-08,
         weight_decay=1e-4
@@ -446,7 +446,10 @@ def training_3d_decoder(dataset, opt, pipe, testing_iterations, args):
         mat_diff_loss = feature_transform_reguliarzer(feat)
         mat_diff_loss2 = feature_transform_reguliarzer(feat2)
 
-        loss = 1.0 * (bce_loss +  bce_loss_) + bce_loss2 + mat_diff_loss_scale * (mat_diff_loss  + mat_diff_loss2)
+        # coefficent in 3D watermarking loss
+        lambda1_prime = 2.0
+        
+        loss = 1.0 * (bce_loss +  bce_loss_) + lambda1_prime * bce_loss2 + mat_diff_loss_scale * (mat_diff_loss  + mat_diff_loss2)
 
         loss.backward(retain_graph=True)
 
@@ -531,6 +534,7 @@ def training_3d_decoder(dataset, opt, pipe, testing_iterations, args):
             # Optimizer step
             if iteration < opt.iterations:
                 optimizer.step()
+                scheduler.step() # Exponential scheduler
                 optimizer.zero_grad()
 
 if __name__ == "__main__":
